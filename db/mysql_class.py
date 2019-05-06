@@ -5,23 +5,27 @@ class MysqlTools:
     '''
     MYSQL 工具类
     所有操作均以事务形式完成，增删改查默认方式下不开启自动提交事务
+    （PS：建议使用自动提交事务模式，在未使用自动提交事务模式下，每次查询完也需要提交事务）
     '''
     # 基本数据库配置
-    __HOST = 'xxx.xxx.xxx.xxx'  # 配置host
-    __PORT = 3306  # 配置port
-    __USERNAME = 'xxxx'  # 配置username
-    __PASSWORD = 'xxxx'  # 配置password
-    __DB = 'xxxx'  # 配置数据库
+    __HOST = 'xxx.xxx.xxx.xxx'  # 配置Mysql host
+    __PORT = 3306  # 配置Mysql port
+    __USERNAME = 'xxxx'  # 配置Mysql username
+    __PASSWORD = 'xxxx'  # 配置Mysql password
+    __DB = 'xxxx'  # 配置Mysql 连接数据库
 
     # 其他服务配置
     conn = ''
     __RE_BACK = 3   # 失败重试次数
     __RE_BACK_TIME = 10 # 失败重试时间间隔
-    __IS_AUTO_COMMIT = False # 是否开启自动提交事务（True开启，False不开启）
+    __IS_AUTO_COMMIT = True # 是否开启自动提交事务（True开启，False不开启）
     __IS_DEBUG = False # 是否开启输出sql信息模式（True开启，False不开启）
 
     def __init__(self):
-        self.conn = pymysql.connect(host=self.__HOST,port=int(self.__PORT),user=self.__USERNAME,passwd=self.__PASSWORD,db=self.__DB)
+        try:
+            self.conn = pymysql.connect(host=self.__HOST,port=int(self.__PORT),user=self.__USERNAME,passwd=self.__PASSWORD,db=self.__DB)
+        except:
+            raise Exception('Init object fail,please check the database configuration..')
 
     def insert_json(self,table_name,data):
         '''
@@ -42,9 +46,7 @@ class MysqlTools:
                     else:
                         insert_sql += ','
                         value_sql += ','
-
                     insert_sql += '`'+key+'`'
-
                     if type(data[key]) == bool:
                         data[key] = 1 if data[key] == True else 0
                     if type(data[key]) == str or type(data[key]) == list \
@@ -52,17 +54,18 @@ class MysqlTools:
                         value_sql += "'"+str(data[key]).replace("'","\\'") + "'"
                     else:
                         value_sql += str(data[key] if data[key] != None else "'None'")
-
                 sql = insert_sql + ')' + value_sql +')'
-
-                self.execute(sql)
+                if self.__IS_DEBUG:
+                    print(sql)
+                cursor = self.conn.cursor()
+                cursor.execute(sql)
                 if self.__IS_AUTO_COMMIT:
                     self.conn.commit()
                 return 1
-            except:
+            except Exception as e:
                 re_back += 1
                 if self.__IS_DEBUG:
-                    print('insert_json '+str(re_back)+' fail,error info:'+str(e))
+                    print('The insert_json '+str(re_back)+' fail,error info:'+str(e))
                 time.sleep(self.__RE_BACK_TIME)
         return 0
 
@@ -100,7 +103,7 @@ class MysqlTools:
             except Exception as e:
                 re_back += 1
                 if self.__IS_DEBUG:
-                    print('query_json '+str(re_back)+' fail,error info:'+str(e))
+                    print('The query_json function '+str(re_back)+' fail,error info:'+str(e))
                 time.sleep(self.__RE_BACK_TIME)
         return 0
 
@@ -111,19 +114,17 @@ class MysqlTools:
         re_back = 0
         while re_back < self.__RE_BACK:
             try:
-
                 if self.__IS_DEBUG:
                     print(sql)
                 cursor = self.conn.cursor()
                 res = cursor.execute(sql)
-
                 if self.__IS_AUTO_COMMIT:
                     self.conn.commit()
                 return res
-            except:
+            except Exception as e:
                 re_back += 1
                 if self.__IS_DEBUG:
-                    print('execute '+str(re_back)+' fail,error info:'+str(e))
+                    print('The execute function '+str(re_back)+' fail,error info:'+str(e))
                 time.sleep(self.__RE_BACK_TIME)
         return 0
 
@@ -136,10 +137,10 @@ class MysqlTools:
             try:
                 self.conn.commit()
                 return 1
-            except:
+            except Exception as e:
                 re_back += 1
                 if self.__IS_DEBUG:
-                    print('commit '+str(re_back)+' fail,error info:'+str(e))
+                    print('The commit function '+str(re_back)+' fail,error info:'+str(e))
                 time.sleep(self.__RE_BACK_TIME)
         return 0
 
@@ -162,10 +163,10 @@ class MysqlTools:
 
                 list = cursor.fetchall()
                 return list
-            except:
+            except Exception as e:
                 re_back += 1
                 if self.__IS_DEBUG:
-                    print('query '+str(re_back)+' fail,error info:'+str(e))
+                    print('The query function '+str(re_back)+' fail,error info:'+str(e))
                 time.sleep(self.__RE_BACK_TIME)
         return 0
 
