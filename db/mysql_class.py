@@ -177,6 +177,5 @@ if __name__ == '__main__':
         'key1' : 'value1',
         'key2' : 2,
     }
-    #
     result = mysql.insert_json('table_name',data)
 
