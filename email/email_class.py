@@ -6,16 +6,17 @@ from email.mime.image import MIMEImage
 import time
 class EmailTools:
     '''
-    发送邮件工具类
+    发送邮件工具类（基于非SSL的 SMTP 发送）
     '''
     # 基本邮件信息配置
     #文本邮件配置
-    __EMAIL_HOST = 'smtp.qq.com' # 邮件服务商域名
+    # __EMAIL_HOST = 'smtp.qq.com' # 邮件服务商域名 QQ邮箱
+    __EMAIL_HOST = 'smtp.exmail.qq.com' # QQ企业邮箱
     __EMAIL_PORT = 25 # 邮件服务商端口
-    __SEND_EMAIL = 'xxxxxxxxxxxx' # 发件人邮箱
-    __SEND_EMAIL_PASS = 'xxxxxxxxxxxx' # 发件人密钥
-    __RECEIVE_EMAIL = ['xxxxx','xxxxxx'] # 收件人邮箱
-    __SEND_USER = 'xxxxxxxxx' # 发件人名称
+    __SEND_EMAIL = 'xxx' # 发件人邮箱
+    __SEND_EMAIL_PASS = 'xxx' # 发件人密钥
+    __RECEIVE_EMAIL = ['xxx','xxx'] # 收件人邮箱
+    __SEND_USER = 'xxx' # 发件人名称
     __TYPE = 'plain'  # 可填入字段 plain,html。
     __ENCODING = 'utf-8'  # 配置邮件编码
 
@@ -55,7 +56,7 @@ class EmailTools:
         message['Subject'] = subject
 
         message['From'] = Header(self.__SEND_USER, self.__ENCODING)
-        for recive_email in self.__RECIVE_EMAIL:
+        for recive_email in self.__RECEIVE_EMAIL:
             message['To'] = Header(recive_email, self.__ENCODING)
         return message
 
@@ -98,8 +99,8 @@ class EmailTools:
         :return:
         '''
         re_back = 0
-        if type(self.__RECIVE_EMAIL) != list:
-            self.__RECIVE_EMAIL = [self.__RECIVE_EMAIL]
+        if type(self.__RECEIVE_EMAIL) != list:
+            self.__RECEIVE_EMAIL = [self.__RECEIVE_EMAIL]
         message_text_obj = self.__get_text_message(content=message)
 
         mime_message = MIMEMultipart('related')
@@ -113,7 +114,7 @@ class EmailTools:
         send_message = self.__set_message(title, mime_message)
         while re_back < self.__RE_BACK:
             try:
-                self.__smtp_obj.sendmail(self.__SEND_EMAIL,self.__RECIVE_EMAIL,send_message.as_string())
+                self.__smtp_obj.sendmail(self.__SEND_EMAIL,self.__RECEIVE_EMAIL,send_message.as_string())
                 if self.__IS_DEBUG:
                     print('all email is finished.')
                 return 1
