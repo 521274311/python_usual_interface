@@ -14,7 +14,7 @@ class EmailTools:
     __EMAIL_PORT = 25 # 邮件服务商端口
     __SEND_EMAIL = 'xxxxxxxxxxxx' # 发件人邮箱
     __SEND_EMAIL_PASS = 'xxxxxxxxxxxx' # 发件人密钥
-    __RECIVE_EMAIL = ['xxxxx','xxxxxx'] # 收件人邮箱
+    __RECEIVE_EMAIL = ['xxxxx','xxxxxx'] # 收件人邮箱
     __SEND_USER = 'xxxxxxxxx' # 发件人名称
     __TYPE = 'plain'  # 可填入字段 plain,html。
     __ENCODING = 'utf-8'  # 配置邮件编码
@@ -110,7 +110,6 @@ class EmailTools:
         if len(self.__PAGE_PICTURE) > 0:
             mime_message = self.__add_page_picture(mime_message)
 
-        # send_message = self.__set_message(title,message_text_obj) if len(self.__ENCLOSURE) == 0 else self.__set_message(title,mime_message)
         send_message = self.__set_message(title, mime_message)
         while re_back < self.__RE_BACK:
             try:
@@ -124,6 +123,17 @@ class EmailTools:
                     print('send error '+str(re_back)+' times,error info:'+ str(e))
                 time.sleep(self.__RE_BACK_TIME)
         return 0
+
+    def set_receive_email(self,receive_email):
+        '''
+        设置收件人
+        :param receive_email: 收件人邮件，支持list,tuple类型
+        :return:
+        '''
+        if type(receive_email) not in (list,tuple):
+            receive_email = [receive_email]
+        self.__RECEIVE_EMAIL = receive_email
+
 
 if __name__ == '__main__':
     #demo
