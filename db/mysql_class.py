@@ -276,6 +276,12 @@ class MysqlTools:
     def __str__(self):
         pass
 
+    def set_config(self,**kwargs):
+        self.__init_config(kwargs)
+
+    def get_config(self):
+        return self.__CONFIG
+
 if __name__ == '__main__':
     #demo
     mysql = MysqlTools(host='127.0.0.1', port=3306, username='root', password='1224qunlong', db='test')
