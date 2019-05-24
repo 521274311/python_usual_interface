@@ -3,7 +3,7 @@ import datetime
 import time
 
 
-def check_is_error( fn):
+def check_is_error(fn):
     '''
     检测程序是否出错，并重试
     :param fn:
@@ -79,7 +79,11 @@ class MysqlTools:
         :param username: 数据库用户名
         :param password: 数据库密码
         :param db: 选择的数据库
-        :param re_back:
+        :param re_back: 失败重试次数
+        :param re_back_time: 失败重试间隔时间
+        :param is_auto_commit: 自动提交事务（默认）
+        :param is_debug: 是否开启调试模式
+        :param batch_insert_count: 批量插入时每个insert的value最大长度
         '''
         if host is not None:
             self.__HOST = host
@@ -193,8 +197,6 @@ class MysqlTools:
 
         cursor = self.conn.cursor()
         cursor.execute(sql)
-
-
         cursor.close()
         return 1
 
