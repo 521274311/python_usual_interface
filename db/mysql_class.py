@@ -46,9 +46,9 @@ class MysqlTools:
     conn = ''
     __CONFIG = {
         'RE_BACK' : 3, # 失败重试次数
-        'RE_BACK_TIME' : 1,  # 失败重试时间间隔
+        'RE_BACK_TIME' : 5,  # 失败重试时间间隔（秒）
         'IS_AUTO_COMMIT' : True,  # 是否开启自动提交事务（True开启，False不开启）
-        'IS_DEBUG' : True,  # 是否开启调试模式（输出错误信息，不处理）
+        'IS_DEBUG' : True,  # 是否开启调试模式（输出错误信息，输出sql）
         'BATCH_INSERT_COUNT' : 200, # 批量插入数据时，单条语句的数据的最大条数
     }
 
@@ -114,7 +114,7 @@ class MysqlTools:
 
         return value_sql
     @check_is_error
-    def insert_jsons(self,table_name='', data=[]):
+    def insert_jsons(self,table_name='', data=None):
         # 单次插入个数
         lens = self.__CONFIG['BATCH_INSERT_COUNT']
         current_index = 0
@@ -153,14 +153,15 @@ class MysqlTools:
 
             insert_sql +=  ')'
             sql = insert_sql + value_sql[0:-1]
-            print(sql)
+            if self.__CONFIG['IS_DEBUG']:
+                print(sql)
             cursor = self.conn.cursor()
             cursor.execute(sql)
             cursor.close()
         return 1
 
     @check_is_error
-    def insert_json(self,table_name='',data=''):
+    def insert_json(self,table_name='',data=None):
         '''
         字典类型入库，将key作为字段，value作为值插入数据库
         :param table_name: 表名
@@ -187,8 +188,12 @@ class MysqlTools:
                 value_sql += str(data[key] if data[key] != None else "'None'")
         sql = insert_sql + ')' + value_sql +')'
 
+        if self.__CONFIG['IS_DEBUG']:
+            print(sql)
+
         cursor = self.conn.cursor()
         cursor.execute(sql)
+
 
         cursor.close()
         return 1
@@ -201,8 +206,10 @@ class MysqlTools:
         :return: 列表类型 或 整数0，列表类型查询成功，0 查询失败
         '''
 
-        cursor = self.conn.cursor()
+        if self.__CONFIG['IS_DEBUG']:
+            print(sql)
 
+        cursor = self.conn.cursor()
         cursor.execute(sql)
         fields = cursor.description
         data = cursor.fetchall()
@@ -223,10 +230,12 @@ class MysqlTools:
         '''
         sql 增删改处理方法
         '''
+        if self.__CONFIG['IS_DEBUG']:
+            print(sql)
+
         cursor = self.conn.cursor()
         res = cursor.execute(sql)
-        if self.__CONFIG['IS_AUTO_COMMIT']:
-            self.conn.commit()
+
         return res
 
     def commit(self):
@@ -270,6 +279,7 @@ class MysqlTools:
 if __name__ == '__main__':
     #demo
     mysql = MysqlTools(host='127.0.0.1', port=3306, username='root', password='1224qunlong', db='test')
+    print(mysql.insert_json('test_1',{'name' : 'hhh', 'sex' : 'male'}))
     print(mysql.insert_jsons('test_1',[{'name' : "hhh",'sex' : 'female'},{'name' : 'eee','sex' : 'male'}]))
 
 
