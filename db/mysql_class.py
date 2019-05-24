@@ -36,11 +36,11 @@ class MysqlTools:
     （PS：建议使用自动提交事务模式，在未使用自动提交事务模式下，每次查询完也需要提交事务）
     '''
     # 基本数据库配置
-    __HOST = 'xxx.xxx.xxx.xxx'  # 配置Mysql host
-    __PORT = 3306  # 配置Mysql port
-    __USERNAME = 'xxxx'  # 配置Mysql username
-    __PASSWORD = 'xxxx'  # 配置Mysql password
-    __DB = 'xxxx'  # 配置Mysql 连接数据库
+    __HOST = '10.2.16.102'  # 配置Mysql host
+    __PORT = 33306  # 配置Mysql port
+    __USERNAME = 'jinqunlong'  # 配置Mysql username
+    __PASSWORD = 'jinqunlong123$%^'  # 配置Mysql password
+    __DB = 'monitor_db'  # 配置Mysql 连接数据库
 
     # 其他服务配置
     conn = ''
@@ -63,7 +63,6 @@ class MysqlTools:
     @check_is_error
     def __connect(self):
         self.conn = pymysql.connect(host=self.__HOST,port=int(self.__PORT),user=self.__USERNAME,passwd=self.__PASSWORD,db=self.__DB)
-
 
 
     def __init_config(self,para):
@@ -94,6 +93,69 @@ class MysqlTools:
 
         self.__connect()
         self.__init_config(kwargs)
+
+    def __insert_json_value(self,data, value_sql):
+        value_sql += '('
+        begin = True
+        for key in data.keys():
+            if begin == True:
+                begin = False
+            else:
+                value_sql += ','
+            if type(data[key]) == bool:
+                data[key] = 1 if data[key] == True else 0
+            if type(data[key]) == str or type(data[key]) == list \
+                    or type(data[key]) == set or type(data[key]) == dict:
+                value_sql += "'" + str(data[key]).replace("'", "\\'") + "'"
+            else:
+                value_sql += str(data[key] if data[key] != None else "'None'")
+        value_sql += ')'
+
+        return value_sql
+    @check_is_error
+    def insert_jsons(self,table_name='', data=[]):
+        # 单次插入个数
+        lens = 100
+        current_index = 0
+        no_end = True
+        while no_end:
+            insert_sql = 'insert into ' + table_name + '('
+            value_sql = ' values '
+            value_sql += '('
+            begin = True
+            for key in data[current_index].keys():
+                if begin == True:
+                    begin = False
+                else:
+                    insert_sql += ','
+                    value_sql += ','
+                insert_sql += '`' + key + '`'
+                if type(data[current_index][key]) == bool:
+                    data[current_index][key] = 1 if data[current_index][key] == True else 0
+                if type(data[current_index][key]) == str or type(data[current_index][key]) == list \
+                        or type(data[current_index][key]) == set or type(data[current_index][key]) == dict:
+                    value_sql += "'" + str(data[current_index][key]).replace("'", "\\'") + "'"
+                else:
+                    value_sql += str(data[current_index][key] if data[current_index][key] != None else "'None'")
+            value_sql += '),'
+            current_index += 1
+
+            while True:
+                if current_index >= len(data):
+                    no_end = False
+                    break
+                value_sql = self.__insert_json_value(data[current_index],value_sql)
+                current_index += 1
+                value_sql += ','
+                if (current_index + 1) % lens == 0:
+                    break
+
+            insert_sql +=  ')'
+            sql = insert_sql + value_sql[0:-1]
+            print(sql)
+            cursor = self.conn.cursor()
+            cursor.execute(sql)
+            cursor.close()
 
     @check_is_error
     def insert_json(self,table_name='',data=''):
@@ -126,6 +188,7 @@ class MysqlTools:
         cursor = self.conn.cursor()
         cursor.execute(sql)
 
+        cursor.close()
         return 1
 
     @check_is_error
@@ -150,6 +213,7 @@ class MysqlTools:
                     else str(dt[i])) if type(dt[i]) != datetime.date else str(dt[i]))
                 i += 1
             res.append(rs)
+        cursor.close()
         return res
 
     @check_is_error
@@ -159,6 +223,8 @@ class MysqlTools:
         '''
         cursor = self.conn.cursor()
         res = cursor.execute(sql)
+        if self.__CONFIG['IS_AUTO_COMMIT']:
+            self.conn.commit()
         return res
 
     def commit(self):
@@ -190,6 +256,10 @@ class MysqlTools:
         except:
             pass
         self.__connect()
+        return True
+
+    def close(self):
+        self.conn.close()
         return True
 
     def __str__(self):
