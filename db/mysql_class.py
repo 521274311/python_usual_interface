@@ -49,6 +49,7 @@ class MysqlTools:
         'RE_BACK_TIME' : 1,  # 失败重试时间间隔
         'IS_AUTO_COMMIT' : True,  # 是否开启自动提交事务（True开启，False不开启）
         'IS_DEBUG' : True,  # 是否开启调试模式（输出错误信息，不处理）
+        'BATCH_INSERT_COUNT' : 200, # 批量插入数据时，单条语句的数据的最大条数
     }
 
     @property
@@ -115,7 +116,7 @@ class MysqlTools:
     @check_is_error
     def insert_jsons(self,table_name='', data=[]):
         # 单次插入个数
-        lens = 100
+        lens = self.__CONFIG['BATCH_INSERT_COUNT']
         current_index = 0
         no_end = True
         while no_end:
@@ -156,6 +157,7 @@ class MysqlTools:
             cursor = self.conn.cursor()
             cursor.execute(sql)
             cursor.close()
+        return 1
 
     @check_is_error
     def insert_json(self,table_name='',data=''):
@@ -268,7 +270,7 @@ class MysqlTools:
 if __name__ == '__main__':
     #demo
     mysql = MysqlTools(host='127.0.0.1', port=3306, username='root', password='1224qunlong', db='test')
-    print(mysql.insert_json(''))
+    print(mysql.insert_jsons('test_1',[{'name' : "hhh",'sex' : 'female'},{'name' : 'eee','sex' : 'male'}]))
 
 
 
